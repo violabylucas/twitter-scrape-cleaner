@@ -17,6 +17,8 @@
 - "listed_count"
 - "media_count"
 - "quote_count"
+- "quoted_tweet_author_bio"
+- "quoted_tweet_text"
 - "reply_count"
 - "retweet_count"
 - "screen_name"
