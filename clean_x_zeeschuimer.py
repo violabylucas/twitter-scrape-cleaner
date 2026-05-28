@@ -9,6 +9,8 @@ Keeps:
 - location where available
 - tweet engagement counts
 - user/account scale metrics
+- quoted tweet text
+- quoted tweet author bio
 
 Drops by omission:
 - your interaction state (favorited, bookmarked, retweeted, followedby, following, etc.)
@@ -49,6 +51,8 @@ TWEET_FIELDS = [
     "user_location",
     "user_description",
     "user_description_lang",
+    "quoted_tweet_text",
+    "quoted_tweet_author_bio",
     "like_count",
     "reply_count",
     "retweet_count",
@@ -68,24 +72,6 @@ TWEET_FIELDS = [
     "source_url",
     "search_url",
 ]
-
-
-NUMERIC_FIELDS = {
-    "collected_at",
-    "last_updated_at",
-    "like_count",
-    "reply_count",
-    "retweet_count",
-    "quote_count",
-    "view_count",
-    "bookmark_count",
-    "followers_count",
-    "following_count",
-    "statuses_count",
-    "listed_count",
-    "favourites_count",
-    "media_count",
-}
 
 
 def flatten_dict(obj: Any, prefix: str = "", out: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -161,14 +147,12 @@ def to_str(value: Any) -> Optional[str]:
 
 
 def extract_record(raw: Dict[str, Any]) -> Dict[str, Any]:
-    # Top-level wrapper metadata
     collected_at = raw.get("timestamp_collected")
     last_updated_at = raw.get("last_updated")
     source_platform = raw.get("source_platform")
     search_url = raw.get("source_platform_url")
     source_url = raw.get("source_url")
 
-    # Main tweet payload lives in raw["data"]
     payload = raw.get("data", {})
     if not isinstance(payload, dict):
         return {}
@@ -233,10 +217,20 @@ def extract_record(raw: Dict[str, Any]) -> Dict[str, Any]:
         "user_description_lang": to_str(pick_first(
             idx,
             "core.user_results.result.profile_bio.description_language",
-            "core.user_results.result.profile_bio.entities.description.language",
-            "core.user_results.result.profile_description.language",
-            "core.user_results.result.legacy.profile_description.language",
             "core.user_results.result.profile_description_language"
+        )),
+
+        "quoted_tweet_text": to_str(pick_longest(
+            idx,
+            "quoted_status_result.result.legacy.full_text",
+            "quoted_status_result.result.note_tweet.note_tweet_results.result.text",
+            "quoted_status_result.result.note_tweet.results.result.text",
+            "quoted_status_result.result.legacy.text"
+        )),
+        "quoted_tweet_author_bio": to_str(pick_first(
+            idx,
+            "quoted_status_result.result.core.user_results.result.legacy.description",
+            "quoted_status_result.result.core.user_results.result.profile_bio.description"
         )),
 
         "like_count": to_int(pick_first(idx, "legacy.favorite_count")),
@@ -330,6 +324,7 @@ def clean_file(input_path: Path, outdir: Path) -> Tuple[Path, Path, Path]:
         "notes": [
             "Top-level wrapper fields are preserved only where useful for provenance and timestamps.",
             "Tweet and user content are extracted from raw['data'].",
+            "Quoted tweet text and quoted author bio are included when present.",
             "Media fields are excluded by omission.",
             "User interaction / relationship fields are excluded by omission."
         ]

@@ -23,8 +23,6 @@
     "listed_count",
     "media_count",
     "quote_count",
-    "quoted_tweet_author_bio",
-    "quoted_tweet_text",
     "reply_count",
     "retweet_count",
     "screen_name",
@@ -46,7 +44,6 @@
   "notes": [
     "Top-level wrapper fields are preserved only where useful for provenance and timestamps.",
     "Tweet and user content are extracted from raw['data'].",
-    "Quoted tweet text and quoted author bio are included when present.",
     "Media fields are excluded by omission.",
     "User interaction / relationship fields are excluded by omission."
   ]
